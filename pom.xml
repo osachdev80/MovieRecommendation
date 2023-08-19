@@ -77,6 +77,12 @@
             <version>${spring-boot.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>2.2</version> <!-- Use the appropriate version -->
+            <scope>test</scope> <!-- Make it a test dependency -->
+        </dependency>
     </dependencies>
 
 </project>

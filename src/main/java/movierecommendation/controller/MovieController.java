@@ -36,7 +36,7 @@ public class MovieController {
        return movieService.addMovie(movie);
     }
 
-    @PostMapping("/{id}/rate")
+    @PostMapping(path = "/{movieId}/rate")
     public ResponseEntity<String> rateMovie(
             @PathVariable Long movieId,
             @RequestParam double rating) {

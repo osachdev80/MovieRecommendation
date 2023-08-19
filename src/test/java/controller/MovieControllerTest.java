@@ -1,40 +1,45 @@
 package controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import movierecommendation.controller.MovieController;
 import movierecommendation.model.Movie;
 import movierecommendation.repository.MovieRepository;
+import movierecommendation.service.MovieService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WebMvcTest(MovieController.class)
+@ComponentScan(basePackages = "movierecommendation.controller")
+@ContextConfiguration(classes = MovieService.class)
 public class MovieControllerTest {
 
-    @Mock
+    @MockBean
     private MovieRepository movieRepository;
 
-    @InjectMocks
-    private MovieController movieController;
+    @MockBean
+    private MovieService movieService;
 
+    @Autowired
     private MockMvc mockMvc;
-
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(movieController).build();
-    }
 
     @Test
     public void testGetAllMovies() throws Exception {
@@ -42,10 +47,18 @@ public class MovieControllerTest {
         Movie movie2 = new Movie();
 
         when(movieRepository.findAll()).thenReturn(Arrays.asList(movie1, movie2));
+//
+//        mockMvc.perform(MockMvcRequestBuilders.get("/getAllEmployees"))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+//                .andExpect(jsonPath("$", hasSize(2)))
+//                .andExpect(jsonPath("$[0].firstName").value("John"))
+//                .andExpect(jsonPath("$[0].surname").value("Smith"))
+//                .andExpect(jsonPath("$[0].niNumber").value("WE123222A"));
 
-        mockMvc.perform(get("/movies/getMovies"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/movies/getMovies"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$", hasSize(2)));
     }
 
     @Test
@@ -56,8 +69,7 @@ public class MovieControllerTest {
         when(movieRepository.save(any(Movie.class))).thenReturn(movie);
 
         mockMvc.perform(post("/movies/addMovie")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content()
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(content().string("Movie added successfully"));
     }
@@ -66,11 +78,11 @@ public class MovieControllerTest {
     public void testAddMovie_MovieAlreadyExists() throws Exception {
         Movie movie = buildMovie();
 
-        when(movieRepository.existsByTitleAndReleaseYear(anyString(), anyInt())).thenReturn(true);
+        when(movieRepository.existsByTitleAndReleaseYear("Test Title", 2020)).thenReturn(true);
 
         mockMvc.perform(post("/movies/addMovie")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(/* JSON representation of movie */))
+                        .content(asJsonString(movie)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Movie already exists"));
     }
@@ -105,6 +117,11 @@ public class MovieControllerTest {
                 .andExpect(content().string("Movie Not Found"));
     }
 
+    private String asJsonString(Object obj) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(obj);
+    }
+
     private Movie buildMovie() {
         return Movie.builder()
                 .title("Test Title")
@@ -115,4 +132,72 @@ public class MovieControllerTest {
                 .releaseYear(2020)
                 .build();
     }
+//
+//    import org.junit.jupiter.api.Test;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+//import org.springframework.boot.test.mock.mockito.MockBean;
+//import org.springframework.context.annotation.ComponentScan;
+//import org.springframework.http.MediaType;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.test.context.ContextConfiguration;
+//import org.springframework.test.web.servlet.MockMvc;
+//import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+//import randomactivity.client.ExternalApiClient;
+//import randomactivity.model.RandomActivity;
+//import randomactivity.service.RandomActivityService;
+//
+//import java.util.Optional;
+//
+//import static org.mockito.Mockito.when;
+//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+//
+//    @WebMvcTest(RandomActivity.class)
+//    @ComponentScan(basePackages = "randomactivity.controller")
+//    @ContextConfiguration(classes = RandomActivityService.class)
+//
+//    public class RandomActivityTest {
+//        @Autowired
+//        private MockMvc mockMvc;
+//
+//        @MockBean
+//        private ExternalApiClient externalApiClient;
+//
+//        @Test
+//        public void test_getActivityEndPoint_DTO() throws Exception {
+//            RandomActivity randomActivity = RandomActivity.builder()
+//                    .activity("My Activity")
+//                    .accessibility("Accessibilty")
+//                    .key("Key")
+//                    .participants(1)
+//                    .price(2.99)
+//                    .type("Type")
+//                    .build();
+//            when(externalApiClient.getRandomActivity()).thenReturn(ResponseEntity.of(Optional.of(randomActivity)));
+//            mockMvc.perform(MockMvcRequestBuilders.get("/randomActivities"))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+//                    .andExpect(jsonPath("$.activity").value("My Activity"))
+//                    .andExpect(jsonPath("$.accessibility").value("Accessibilty"))
+//                    .andExpect(jsonPath("$.key").value("Key"));
+//        }
+//
+//        @Test
+//        public void test_getActivityEndPoint_JSON() throws Exception {
+//            String jsonData = "{\"Activity\":\"Activty\"}";
+//
+//            when(externalApiClient.getRawJsonResponse()).thenReturn(jsonData);
+//
+//            mockMvc.perform(MockMvcRequestBuilders.get("/randomActivities"))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+//                    .andExpect(jsonPath("$.activity").value("My Activity"))
+//                    .andExpect(jsonPath("$.accessibility").value("Accessibilty"))
+//                    .andExpect(jsonPath("$.key").value("Key"));
+//        }
+//    }
+
+
 }

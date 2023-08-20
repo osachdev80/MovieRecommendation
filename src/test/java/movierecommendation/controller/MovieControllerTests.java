@@ -1,4 +1,4 @@
-package controller;
+package movierecommendation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import movierecommendation.MovieRecommendation;
@@ -127,7 +127,6 @@ public class MovieControllerTests {
                 .andExpect(jsonPath("$[0].title", is("Movie 2")))
                 .andExpect(jsonPath("$[1].title", is("Movie 1")));
 
-        // Verify that the controller calls the service with the correct genre
         verify(movieService).recommendMoviesByRatingsAndGenre("Action");
     }
 

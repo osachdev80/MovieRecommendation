@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidMovieDataException.class)
-    public ResponseEntity<String> handleInvalidMovieDataException(MovieAlreadyExistsException ex) {
+    public ResponseEntity<String> handleInvalidMovieDataException(InvalidMovieDataException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
